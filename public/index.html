@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Upload and WebSocket Client</title>
+</head>
+<body>
+    <h1>Upload CSV File</h1>
+    <input type="file" id="fileInput" accept=".csv">
+    <button id="uploadButton">Upload</button>
+    <div id="messages"></div>
+
+    <script>
+        // WebSocket 連接
+        const socket = new WebSocket('ws://localhost:3000');
+      
+        socket.onopen = () => {
+            console.log('WebSocket connection established');
+        };
+      
+        socket.onclose = () => {
+            console.log('WebSocket connection closed');
+        };
+      
+        socket.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        };
+      
+        socket.addEventListener('open', function () {
+            console.log('Connected to WebSocket server');
+        });
+
+        socket.addEventListener('message', function (event) {
+            const messageDiv = document.getElementById('messages');
+            messageDiv.innerHTML += `<p>${event.data}</p>`;
+            console.log('Message from server: ', event.data);
+        });
+
+        // 上傳文件的功能
+        document.getElementById('uploadButton').addEventListener('click', () => {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Please select a file to upload.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.text();
+                }
+                throw new Error('File upload failed.');
+            })
+            .then(data => {
+                console.log(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>
